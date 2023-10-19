@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{CB736CD3-2055-467E-91CA-66B90695D222}</ProjectGuid>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AssemblyTitle>NetBike.Xml.Tests</AssemblyTitle>
     <Company>NetBike</Company>
     <Product>NetBike.Xml.Tests</Product>
