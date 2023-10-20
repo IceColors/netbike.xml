@@ -68,14 +68,14 @@
         {
             if (context.Member.MappingType != XmlMappingType.Element)
             {
-                throw new XmlSerializationException($"XML mapping of \"{context.ValueType}\" must be Element.");
+                throw new XmlSerializationException($"XML mapping of \"{context.Member.Name?.LocalName ?? context.ValueType?.Name ?? context.ValueType?.ToString()}\" must be Element.");
             }
 
             var item = GetCollectionItem(context);
 
             if (item == null)
             {
-                throw new XmlSerializationException($"XML contract of \"{context.ValueType}\" must contains item info");
+                throw new XmlSerializationException($"XML contract of \"{context.Member.Name?.LocalName ?? context.ValueType?.Name ?? context.ValueType?.ToString()}\" must contains item info");
             }
 
             var collectionProxy = this.CreateProxy(context.ValueType);
