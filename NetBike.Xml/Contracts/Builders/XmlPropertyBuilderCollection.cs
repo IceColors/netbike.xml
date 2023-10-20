@@ -33,11 +33,11 @@
                 throw new ArgumentNullException(nameof(item));
             }
 
-            var index = this.IndexOf(item.PropertyInfo);
+            var index = this.IndexOf(item.MemberInfo);
 
             if (index != -1)
             {
-                throw new ArgumentException($"Property \"{item.PropertyInfo}\" already registered.", nameof(item));
+                throw new ArgumentException($"Property \"{item.MemberInfo}\" already registered.", nameof(item));
             }
 
             this.items.Add(item);
@@ -50,7 +50,7 @@
                 throw new ArgumentNullException(nameof(item));
             }
 
-            var index = this.IndexOf(item.PropertyInfo);
+            var index = this.IndexOf(item.MemberInfo);
 
             if (index == -1)
             {
@@ -106,11 +106,11 @@
             return new XmlPropertyBuilderCollection(items);
         }
 
-        private int IndexOf(PropertyInfo propertyInfo)
+        private int IndexOf(MemberInfo memberInfo)
         {
             for (var i = 0; i < this.items.Count; i++)
             {
-                if (this.items[i].PropertyInfo == propertyInfo)
+                if (this.items[i].MemberInfo == memberInfo)
                 {
                     return i;
                 }

@@ -3,6 +3,7 @@
     using System;
     using System.Xml;
     using NetBike.Xml.Contracts;
+    using NetBike.Xml.Utilities;
 
     public class XmlObjectConverter : IXmlConverter
     {
@@ -177,7 +178,7 @@
                 {
                     var property = propertyState.Property;
 
-                    if (property.DefaultValue != null && property.PropertyInfo.CanWrite)
+                    if (property.DefaultValue != null && property.MemberInfo.CanWrite())
                     {
                         this.SetValue(target, property, property.DefaultValue);
                     }

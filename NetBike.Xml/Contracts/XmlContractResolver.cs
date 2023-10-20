@@ -6,6 +6,7 @@
     using System.Reflection;
     using System.Xml.Serialization;
     using NetBike.Xml.Contracts.Builders;
+    using NetBike.Xml.Utilities;
 
     public class XmlContractResolver : IXmlContractResolver
     {
@@ -41,7 +42,7 @@
                 return new XmlEnumContract(valueType, name, this.ResolveEnumItems(valueType));
             }
 
-            var properties = this.GetProperties(valueType)
+            var properties = this.GetMembers(valueType)
                 .Select(x => this.ResolveProperty(x))
                 .Where(x => x != null);
 
@@ -95,11 +96,9 @@
             return this.nameResolver(name);
         }
 
-        protected virtual IEnumerable<PropertyInfo> GetProperties(Type valueType)
+        protected virtual IEnumerable<MemberInfo> GetMembers(Type valueType)
         {
-            return valueType
-                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .Where(x => x.GetIndexParameters().Length == 0);
+            return valueType.GetPropertiesAndFields();
         }
 
         protected virtual XmlItem ResolveItem(Type valueType)
@@ -150,11 +149,11 @@
             return items;
         }
 
-        protected virtual XmlProperty ResolveProperty(PropertyInfo propertyInfo)
+        protected virtual XmlProperty ResolveProperty(MemberInfo memberInfo)
         {
-            var propertyBuilder = new XmlPropertyBuilder(propertyInfo)
+            var propertyBuilder = new XmlPropertyBuilder(memberInfo)
             {
-                Name = this.ResolveName(propertyInfo.PropertyType, propertyInfo.Name)
+                Name = this.ResolveName(memberInfo.GetMemberType(), memberInfo.Name)
             };
 
             if (!this.SetPropertyAttributes(propertyBuilder))
@@ -177,7 +176,7 @@
                 return true;
             }
 
-            var attributes = XmlPropertyAttributes.GetAttributes(propertyBuilder.PropertyInfo);
+            var attributes = XmlPropertyAttributes.GetAttributes(propertyBuilder.MemberInfo);
 
             if (attributes.Ignore != null)
             {
@@ -185,7 +184,7 @@
             }
 
             var propertyName = propertyBuilder.Name;
-            var propertyType = propertyBuilder.PropertyInfo.PropertyType;
+            var propertyType = propertyBuilder.MemberInfo.GetMemberType();
             var item = this.ResolveItem(propertyType);
 
             if (attributes.Elements != null)

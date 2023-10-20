@@ -386,6 +386,38 @@
             Assert.That(actual, IsXml.Equals(expected).WithIgnoreDeclaration());
         }
 
+        [Test]
+        public void DeserializeTestFieldsTest()
+        {
+            string xml = @"<TestFields xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><a>2</a><MyProperty>5</MyProperty></TestFields>";
+            var expected = new TestFields
+            {
+                a = 2,
+                MyProperty = 5
+            };
+
+            var serializer = new XmlSerializer();
+            
+            var actual = serializer.ParseXml<TestFields>(xml);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        public class TestFields{
+            public int MyProperty { get; set; }
+            public int a;
+
+            public override bool Equals(object obj)
+            {
+                if (!(obj is TestFields other))
+                {
+                    return false;
+                }
+
+                return other.MyProperty == MyProperty && other.a == a;
+            }
+        }
+
         private XmlSerializer GetSerializer()
         {
             var settings = new XmlSerializerSettings

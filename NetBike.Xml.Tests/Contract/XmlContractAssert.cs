@@ -89,7 +89,7 @@
                 var ep = (XmlProperty)expected;
                 var ap = (XmlProperty)actual;
 
-                Assert.AreEqual(ep.PropertyInfo, ap.PropertyInfo);
+                Assert.AreEqual(ep.MemberInfo, ap.MemberInfo);
                 Assert.AreEqual(ep.PropertyName, ap.PropertyName);
                 Assert.AreEqual(ep.IsRequired, ap.IsRequired);
                 Assert.AreEqual(ep.Order, ap.Order);

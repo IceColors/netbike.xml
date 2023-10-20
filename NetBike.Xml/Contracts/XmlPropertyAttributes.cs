@@ -22,16 +22,16 @@
 
         public XmlIgnoreAttribute Ignore { get; set; }
 
-        public static XmlPropertyAttributes GetAttributes(PropertyInfo propertyInfo)
+        public static XmlPropertyAttributes GetAttributes(MemberInfo memberInfo)
         {
-            if (propertyInfo == null)
+            if (memberInfo == null)
             {
-                throw new ArgumentNullException(nameof(propertyInfo));
+                throw new ArgumentNullException(nameof(memberInfo));
             }
 
             var attributes = new XmlPropertyAttributes();
 
-            foreach (var attribute in Attribute.GetCustomAttributes(propertyInfo))
+            foreach (var attribute in Attribute.GetCustomAttributes(memberInfo))
             {
                 switch (attribute)
                 {

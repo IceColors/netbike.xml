@@ -35,7 +35,7 @@
                     throw new ArgumentNullException("properties.property");
                 }
 
-                if (valueType != property.PropertyInfo.ReflectedType)
+                if (valueType != property.MemberInfo.ReflectedType)
                 {
                     throw new ArgumentException("Property must be declared in contract type.", "properties.property");
                 }

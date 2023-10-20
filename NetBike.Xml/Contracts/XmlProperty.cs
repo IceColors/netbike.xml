@@ -11,7 +11,7 @@
         private Func<object, object> getter;
 
         public XmlProperty(
-            PropertyInfo propertyInfo,
+            MemberInfo memberInfo,
             XmlName name,
             XmlMappingType mappingType = XmlMappingType.Element,
             bool isRequired = false,
@@ -24,11 +24,11 @@
             bool isCollection = false,
             int order = -1,
             string dataType = null)
-            : base(propertyInfo.PropertyType, name, mappingType, typeHandling, nullValueHandling, defaultValueHandling, defaultValue, item, knownTypes, dataType)
+            : base(memberInfo.GetMemberType(), name, mappingType, typeHandling, nullValueHandling, defaultValueHandling, defaultValue, item, knownTypes, dataType)
         {
             if (isCollection)
             {
-                if (!propertyInfo.PropertyType.IsEnumerable())
+                if (!memberInfo.GetMemberType().IsEnumerable())
                 {
                     throw new ArgumentException("Collection flag is available only for the IEnumerable type.");
                 }
@@ -36,15 +36,15 @@
                 this.IsCollection = true;
             }
 
-            this.PropertyInfo = propertyInfo;
+            this.MemberInfo = memberInfo;
             this.IsRequired = isRequired;
             this.Order = order;
-            this.HasGetterAndSetter = propertyInfo.CanRead && propertyInfo.CanWrite;
+            this.HasGetterAndSetter = memberInfo.CanRead() && memberInfo.CanWrite();
         }
 
-        public PropertyInfo PropertyInfo { get; }
+        public MemberInfo MemberInfo { get; }
 
-        public string PropertyName => this.PropertyInfo.Name;
+        public string PropertyName => this.MemberInfo.Name;
 
         public bool IsRequired { get; }
 
@@ -58,7 +58,10 @@
         {
             if (this.getter == null)
             {
-                this.getter = DynamicWrapperFactory.CreateGetter(this.PropertyInfo);
+                if (MemberInfo is PropertyInfo propertyInfo)
+                    this.getter = DynamicWrapperFactory.CreateGetter(propertyInfo);
+                else if (MemberInfo is FieldInfo fieldInfo)
+                    this.getter = x => fieldInfo.GetValue(x);
             }
 
             return this.getter(target);
@@ -68,7 +71,10 @@
         {
             if (this.setter == null)
             {
-                this.setter = DynamicWrapperFactory.CreateSetter(this.PropertyInfo);
+                if (MemberInfo is PropertyInfo propertyInfo)
+                    this.setter = DynamicWrapperFactory.CreateSetter(propertyInfo);
+                else if (MemberInfo is FieldInfo fieldInfo)
+                    this.setter = (obj, val) => fieldInfo.SetValue(obj, val);
             }
 
             this.setter(target, value);

@@ -3,18 +3,19 @@
     using System;
     using System.Linq.Expressions;
     using System.Reflection;
+    using NetBike.Xml.Utilities;
 
     public sealed class XmlPropertyBuilder : XmlItemBuilder, IXmlObjectBuilder, IXmlCollectionBuilder
     {
-        public XmlPropertyBuilder(PropertyInfo propertyInfo)
-            : base(propertyInfo.PropertyType)
+        public XmlPropertyBuilder(MemberInfo memberInfo)
+            : base(memberInfo.GetMemberType())
         {
-            this.PropertyInfo = propertyInfo;
+            this.MemberInfo = memberInfo;
             this.MappingType = XmlMappingType.Element;
             this.Order = -1;
         }
 
-        public PropertyInfo PropertyInfo { get; }
+        public MemberInfo MemberInfo { get; }
 
         public XmlMappingType MappingType { get; set; }
 
@@ -51,7 +52,7 @@
                 throw new ArgumentNullException(nameof(property));
             }
 
-            return new XmlPropertyBuilder(property.PropertyInfo)
+            return new XmlPropertyBuilder(property.MemberInfo)
             {
                 Name = property.Name,
                 MappingType = property.MappingType,
@@ -71,8 +72,8 @@
         public new XmlProperty Build()
         {
             return new XmlProperty(
-                this.PropertyInfo,
-                this.Name ?? this.PropertyInfo.Name,
+                this.MemberInfo,
+                this.Name ?? this.MemberInfo.Name,
                 this.MappingType,
                 this.IsRequired,
                 this.TypeHandling,
