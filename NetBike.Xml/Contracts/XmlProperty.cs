@@ -56,28 +56,26 @@
 
         internal object GetValue(object target)
         {
-            if (this.getter == null)
+            getter ??= MemberInfo switch
             {
-                if (MemberInfo is PropertyInfo propertyInfo)
-                    this.getter = DynamicWrapperFactory.CreateGetter(propertyInfo);
-                else if (MemberInfo is FieldInfo fieldInfo)
-                    this.getter = x => fieldInfo.GetValue(x);
-            }
+                PropertyInfo propertyInfo => DynamicWrapperFactory.CreateGetter(propertyInfo),
+                FieldInfo fieldInfo => x => fieldInfo.GetValue(x),
+                _ => this.getter
+            };
 
-            return this.getter(target);
+            return getter?.Invoke(target);
         }
 
         internal void SetValue(object target, object value)
         {
-            if (this.setter == null)
+            setter ??= MemberInfo switch
             {
-                if (MemberInfo is PropertyInfo propertyInfo)
-                    this.setter = DynamicWrapperFactory.CreateSetter(propertyInfo);
-                else if (MemberInfo is FieldInfo fieldInfo)
-                    this.setter = (obj, val) => fieldInfo.SetValue(obj, val);
-            }
-
-            this.setter(target, value);
+                PropertyInfo propertyInfo => DynamicWrapperFactory.CreateSetter(propertyInfo),
+                FieldInfo fieldInfo => (obj, val) => fieldInfo.SetValue(obj, val),
+                _ => setter
+            };
+            if(value != null)
+                setter?.Invoke(target, value);
         }
     }
 }

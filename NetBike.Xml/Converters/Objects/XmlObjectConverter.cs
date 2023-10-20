@@ -21,7 +21,7 @@
         {
             if (context.Member.MappingType != XmlMappingType.Element)
             {
-                throw new XmlSerializationException($"XML mapping of \"{context.ValueType}\" must be Element.");
+                throw new XmlSerializationException($"XML mapping of \"{context.Member.Name?.LocalName ?? context.ValueType?.Name ?? context.ValueType?.ToString()}\" must be Element.");
             }
 
             var contract = context.Contract.ToObjectContract();
