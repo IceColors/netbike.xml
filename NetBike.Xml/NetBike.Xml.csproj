@@ -2,6 +2,7 @@
   <PropertyGroup>
     <ProjectGuid>{6230AFC4-876E-48C0-B555-8BE94E15D4D7}</ProjectGuid>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <AssemblyTitle>NetBike.Xml</AssemblyTitle>
     <Company>NetBike</Company>
     <Product>NetBike.Xml</Product>

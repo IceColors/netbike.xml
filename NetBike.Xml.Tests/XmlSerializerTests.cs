@@ -416,6 +416,11 @@
 
                 return other.MyProperty == MyProperty && other.a == a;
             }
+
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
+            }
         }
 
         private XmlSerializer GetSerializer()

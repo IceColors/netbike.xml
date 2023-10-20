@@ -17,38 +17,6 @@
             return !valueType.IsBasicType();
         }
 
-        public void WriteXml(XmlWriter writer, object value, XmlSerializationContext context)
-        {
-            if (value == null)
-            {
-                return;
-            }
-
-            if (context.Member.MappingType != XmlMappingType.Element)
-            {
-                throw new XmlSerializationException($"XML mapping of \"{context.ValueType}\" must be Element.");
-            }
-
-            var contract = context.Contract.ToObjectContract();
-
-            foreach (var property in contract.Properties)
-            {
-                if (this.CanWriteProperty(property))
-                {
-                    var propertyValue = this.GetValue(value, property);
-
-                    if (!property.IsCollection)
-                    {
-                        context.Serialize(writer, propertyValue, property);
-                    }
-                    else
-                    {
-                        context.SerializeBody(writer, propertyValue, property);
-                    }
-                }
-            }
-        }
-
         public object ReadXml(XmlReader reader, XmlSerializationContext context)
         {
             if (context.Member.MappingType != XmlMappingType.Element)
@@ -108,9 +76,56 @@
             return this.GetResult(target);
         }
 
+        public void WriteXml(XmlWriter writer, object value, XmlSerializationContext context)
+        {
+            if (value == null)
+            {
+                return;
+            }
+
+            if (context.Member.MappingType != XmlMappingType.Element)
+            {
+                throw new XmlSerializationException($"XML mapping of \"{context.ValueType}\" must be Element.");
+            }
+
+            var contract = context.Contract.ToObjectContract();
+
+            foreach (var property in contract.Properties)
+            {
+                if (this.CanWriteProperty(property))
+                {
+                    var propertyValue = this.GetValue(value, property);
+
+                    if (!property.IsCollection)
+                    {
+                        context.Serialize(writer, propertyValue, property);
+                    }
+                    else
+                    {
+                        context.SerializeBody(writer, propertyValue, property);
+                    }
+                }
+            }
+        }
+
         protected virtual bool CanWriteProperty(XmlProperty property)
         {
             return property.HasGetterAndSetter;
+        }
+
+        protected virtual object CreateTarget(XmlContract contract)
+        {
+            return contract.CreateDefault();
+        }
+
+        protected virtual object GetResult(object target)
+        {
+            return target;
+        }
+
+        protected virtual object GetValue(object target, XmlProperty property)
+        {
+            return property.GetValue(target);
         }
 
         protected virtual void OnUnknownProperty(XmlReader reader, object target, XmlSerializationContext context)
@@ -121,24 +136,9 @@
             }
         }
 
-        protected virtual object CreateTarget(XmlContract contract)
-        {
-            return contract.CreateDefault();
-        }
-
-        protected virtual object GetValue(object target, XmlProperty property)
-        {
-            return property.GetValue(target);
-        }
-
         protected virtual void SetValue(object target, XmlProperty property, object propertyValue)
         {
             property.SetValue(target, propertyValue);
-        }
-
-        protected virtual object GetResult(object target)
-        {
-            return target;
         }
 
         private void ReadProperty(XmlReader reader, object target, XmlPropertyInfo[] propertyInfos, XmlMappingType mappingType, XmlSerializationContext context)
@@ -151,12 +151,26 @@
                 {
                     if (propertyInfos[i].CollectionProxy == null)
                     {
+                        var lineNumber = (reader as IXmlLineInfo)?.LineNumber;
                         var value = context.Deserialize(reader, member);
+                        context.Settings.OnXmlDeserialized(new XmlDeserializedEventArgs
+                        {
+                            LineNumber = lineNumber ?? -1,
+                            MemberInfo = propertyInfos[i].Property.MemberInfo,
+                            XmlName = member.Name.LocalName
+                        });
                         this.SetValue(target, propertyInfos[i].Property, value);
                     }
                     else
                     {
+                        var lineNumber = (reader as IXmlLineInfo)?.LineNumber;
                         var value = context.Deserialize(reader, propertyInfos[i].Property.Item);
+                        context.Settings.OnXmlDeserialized(new XmlDeserializedEventArgs
+                        {
+                            LineNumber = lineNumber ?? -1,
+                            MemberInfo = propertyInfos[i].Property.MemberInfo,
+                            XmlName = member.Name.LocalName
+                        });
                         propertyInfos[i].CollectionProxy.Add(value);
                     }
 

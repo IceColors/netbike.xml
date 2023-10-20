@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
+    using System.Reflection;
     using System.Text;
     using System.Xml;
     using NetBike.Xml.Contracts;
@@ -15,24 +16,54 @@
     using NetBike.Xml.Converters.Specialized;
     using NetBike.Xml.TypeResolvers;
 
+    public class XmlDeserializedEventArgs : EventArgs
+    {
+        public int LineNumber { get; set; }
+        public MemberInfo MemberInfo { get; set; }
+        public string XmlName { get; set; }
+    }
+
     public sealed class XmlSerializerSettings
     {
         private static readonly XmlConverterCollection DefaultConverters;
-
-        private readonly ConcurrentDictionary<Type, XmlTypeContext> typeContextCache;
         private readonly XmlConverterCollection converters;
         private readonly List<XmlNamespace> namespaces;
-        private bool omitXmlDeclaration;
-        private bool indent;
-        private string indentChars;
-        private Encoding encoding;
-        private IXmlTypeResolver typeResolver;
+
+        private readonly ConcurrentDictionary<Type, XmlTypeContext> typeContextCache;
         private IXmlContractResolver contractResolver;
         private CultureInfo cultureInfo;
-        private XmlName typeAttributeName;
+        private Encoding encoding;
+        private bool indent;
+        private string indentChars;
         private XmlName nullAttributeName;
+        private bool omitXmlDeclaration;
         private XmlReaderSettings readerSettings;
+        private XmlName typeAttributeName;
+        private IXmlTypeResolver typeResolver;
         private XmlWriterSettings writerSettings;
+
+        public XmlSerializerSettings()
+        {
+            this.converters = new XmlConverterCollection();
+            this.converters.CollectionChanged += (sender, ea) => this.typeContextCache.Clear();
+            this.typeContextCache = new ConcurrentDictionary<Type, XmlTypeContext>();
+            this.typeResolver = new XmlTypeResolver();
+            this.contractResolver = new XmlContractResolver();
+            this.cultureInfo = CultureInfo.InvariantCulture;
+            this.typeAttributeName = new XmlName("type", XmlNamespace.Xsi);
+            this.nullAttributeName = new XmlName("nil", XmlNamespace.Xsi);
+            this.encoding = Encoding.UTF8;
+            this.TypeHandling = XmlTypeHandling.Auto;
+            this.NullValueHandling = XmlNullValueHandling.Ignore;
+            this.DefaultValueHandling = XmlDefaultValueHandling.Include;
+            this.omitXmlDeclaration = false;
+            this.indentChars = "  ";
+            this.indent = false;
+            this.namespaces = new List<XmlNamespace>
+            {
+                new XmlNamespace("xsi", XmlNamespace.Xsi)
+            };
+        }
 
         static XmlSerializerSettings()
         {
@@ -67,42 +98,41 @@
             };
         }
 
-        public XmlSerializerSettings()
-        {
-            this.converters = new XmlConverterCollection();
-            this.converters.CollectionChanged += (sender, ea) => this.typeContextCache.Clear();
-            this.typeContextCache = new ConcurrentDictionary<Type, XmlTypeContext>();
-            this.typeResolver = new XmlTypeResolver();
-            this.contractResolver = new XmlContractResolver();
-            this.cultureInfo = CultureInfo.InvariantCulture;
-            this.typeAttributeName = new XmlName("type", XmlNamespace.Xsi);
-            this.nullAttributeName = new XmlName("nil", XmlNamespace.Xsi);
-            this.encoding = Encoding.UTF8;
-            this.TypeHandling = XmlTypeHandling.Auto;
-            this.NullValueHandling = XmlNullValueHandling.Ignore;
-            this.DefaultValueHandling = XmlDefaultValueHandling.Include;
-            this.omitXmlDeclaration = false;
-            this.indentChars = "  ";
-            this.indent = false;
-            this.namespaces = new List<XmlNamespace>
-            {
-                new XmlNamespace("xsi", XmlNamespace.Xsi)
-            };
+        public event EventHandler<XmlDeserializedEventArgs> Deserialized;
+
+        public void OnXmlDeserialized(XmlDeserializedEventArgs args){
+            Deserialized?.Invoke(this, args);
         }
 
-        public XmlTypeHandling TypeHandling { get; set; }
-
-        public XmlNullValueHandling NullValueHandling { get; set; }
-
-        public XmlDefaultValueHandling DefaultValueHandling { get; set; }
-
-        public bool OmitXmlDeclaration
+        public IXmlContractResolver ContractResolver
         {
-            get => this.omitXmlDeclaration;
+            get => this.contractResolver;
 
             set
             {
-                this.omitXmlDeclaration = value;
+                this.contractResolver = value ?? throw new ArgumentNullException(nameof(value));
+                this.typeContextCache.Clear();
+            }
+        }
+
+        public ICollection<IXmlConverter> Converters => this.converters;
+
+        public CultureInfo Culture
+        {
+            get => this.cultureInfo;
+
+            set => this.cultureInfo = value ?? throw new ArgumentNullException(nameof(value));
+        }
+
+        public XmlDefaultValueHandling DefaultValueHandling { get; set; }
+
+        public Encoding Encoding
+        {
+            get => this.encoding;
+
+            set
+            {
+                this.encoding = value ?? throw new ArgumentNullException(nameof(value));
                 this.readerSettings = null;
             }
         }
@@ -129,12 +159,7 @@
             }
         }
 
-        public XmlName TypeAttributeName
-        {
-            get => this.typeAttributeName;
-
-            set => this.typeAttributeName = value ?? throw new ArgumentNullException(nameof(value));
-        }
+        public ICollection<XmlNamespace> Namespaces => this.namespaces;
 
         public XmlName NullAttributeName
         {
@@ -143,12 +168,27 @@
             set => this.nullAttributeName = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public CultureInfo Culture
-        {
-            get => this.cultureInfo;
+        public XmlNullValueHandling NullValueHandling { get; set; }
 
-            set => this.cultureInfo = value ?? throw new ArgumentNullException(nameof(value));
+        public bool OmitXmlDeclaration
+        {
+            get => this.omitXmlDeclaration;
+
+            set
+            {
+                this.omitXmlDeclaration = value;
+                this.readerSettings = null;
+            }
         }
+
+        public XmlName TypeAttributeName
+        {
+            get => this.typeAttributeName;
+
+            set => this.typeAttributeName = value ?? throw new ArgumentNullException(nameof(value));
+        }
+
+        public XmlTypeHandling TypeHandling { get; set; }
 
         public IXmlTypeResolver TypeResolver
         {
@@ -159,53 +199,6 @@
                 this.typeResolver = value ?? throw new ArgumentNullException(nameof(value));
                 this.typeContextCache.Clear();
             }
-        }
-
-        public IXmlContractResolver ContractResolver
-        {
-            get => this.contractResolver;
-
-            set
-            {
-                this.contractResolver = value ?? throw new ArgumentNullException(nameof(value));
-                this.typeContextCache.Clear();
-            }
-        }
-
-        public Encoding Encoding
-        {
-            get => this.encoding;
-
-            set
-            {
-                this.encoding = value ?? throw new ArgumentNullException(nameof(value));
-                this.readerSettings = null;
-            }
-        }
-
-        public ICollection<XmlNamespace> Namespaces => this.namespaces;
-
-        public ICollection<IXmlConverter> Converters => this.converters;
-
-        internal XmlWriterSettings GetWriterSettings()
-        {
-            var settings = this.writerSettings;
-
-            if (settings == null)
-            {
-                settings = new XmlWriterSettings
-                {
-                    OmitXmlDeclaration = this.OmitXmlDeclaration,
-                    Indent = this.Indent,
-                    Encoding = this.Encoding,
-                    IndentChars = this.IndentChars,
-                    CloseOutput = false
-                };
-
-                this.writerSettings = settings;
-            }
-
-            return settings;
         }
 
         internal XmlReaderSettings GetReaderSettings()
@@ -236,6 +229,27 @@
             }
 
             return context;
+        }
+
+        internal XmlWriterSettings GetWriterSettings()
+        {
+            var settings = this.writerSettings;
+
+            if (settings == null)
+            {
+                settings = new XmlWriterSettings
+                {
+                    OmitXmlDeclaration = this.OmitXmlDeclaration,
+                    Indent = this.Indent,
+                    Encoding = this.Encoding,
+                    IndentChars = this.IndentChars,
+                    CloseOutput = false
+                };
+
+                this.writerSettings = settings;
+            }
+
+            return settings;
         }
 
         private static IXmlConverter GetConverter(XmlContract contract, IXmlConverter converter)
