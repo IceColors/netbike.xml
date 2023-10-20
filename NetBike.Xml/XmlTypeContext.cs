@@ -1,4 +1,6 @@
-﻿namespace NetBike.Xml
+﻿using System.Diagnostics;
+
+namespace NetBike.Xml
 {
     using System;
     using System.Xml;
@@ -28,7 +30,11 @@
 
         private static Func<XmlReader, XmlSerializationContext, object> NotReadable(Type valueType)
         {
-            return (r, c) => throw new XmlSerializationException($"Readable converter for the type \"{valueType}\" is not found.");
+            return (r, c) =>
+            {
+                r.Skip();
+                return valueType.IsValueType ? Activator.CreateInstance(valueType) : null;
+            };
         }
 
         private static Action<XmlWriter, object, XmlSerializationContext> NotWritable(Type valueType)
