@@ -7,10 +7,11 @@
     <Company>NetBike</Company>
     <Product>NetBike.Xml</Product>
     <Copyright>Copyright © NetBike 2015</Copyright>
-    <Product>NetBike.Xml</Product>
-    <Description>Fast, flexible and high customizable XML serializer for converting between .NET objects and XML.</Description>
-    <AssemblyVersion>0.7.0.0</AssemblyVersion>
-    <Version>0.7.0</Version>
+    <Description>Fast, flexible and high customizable XML serializer for converting between .NET objects and XML.
+    Custom version to handle deserialization of fields.</Description>
+    <AssemblyVersion>0.7.0.1</AssemblyVersion>
+    <VersionPrefix>0.7.0</VersionPrefix>
+	  <VersionSuffix>custom</VersionSuffix>
     <Authors>NetBike</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/netbike/netbike.xml</PackageProjectUrl>
