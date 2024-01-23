@@ -55,7 +55,7 @@
             var dynamicMethod = new DynamicMethod(
                 "Get" + propertyInfo.Name,
                 Types.Object,
-                new Type[] { Types.Object },
+                [Types.Object],
                 Module,
                 false);
 
@@ -92,26 +92,26 @@
 
             PushOwner(ownerType, generator, setMethod);
             generator.Emit(OpCodes.Ldarg_1);
-            EmitUnboxOrCast(generator, propertyInfo.PropertyType);
+            EmitUnboxOrCast(generator, propertyInfo.PropertyType, true);
             EmitMethodCall(generator, setMethod);
             generator.Emit(OpCodes.Ret);
 
             return (Action<object, object>)dynamicMethod.CreateDelegate(SetterType);
         }
 
-        private static void EmitUnboxOrCast(ILGenerator il, Type type)
+        private static void EmitUnboxOrCast(ILGenerator il, Type type, bool load)
         {
             var underlyingType = Nullable.GetUnderlyingType(type);
             if (underlyingType != null)
             {
                 il.Emit(OpCodes.Unbox_Any, underlyingType);
                 
-                var ci = typeof(Nullable<>).MakeGenericType(underlyingType).GetConstructor(new[] { underlyingType });
+                var ci = typeof(Nullable<>).MakeGenericType(underlyingType).GetConstructor([underlyingType]);
                 il.Emit(OpCodes.Newobj, ci);
             }
             else
             {
-                var opCode = type.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass;
+                var opCode = type.IsValueType ? load ? OpCodes.Unbox_Any : OpCodes.Unbox : OpCodes.Castclass;
                 il.Emit(opCode, type);
             }
         }
@@ -127,7 +127,7 @@
             if (!getMethod.IsStatic)
             {
                 generator.Emit(OpCodes.Ldarg_0);
-                EmitUnboxOrCast(generator, ownerType);
+                EmitUnboxOrCast(generator, ownerType, false);
             }
         }
     }

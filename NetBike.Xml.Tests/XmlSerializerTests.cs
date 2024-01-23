@@ -387,6 +387,65 @@
         }
 
         [Test]
+        public void SerializeNullableValueType()
+        {
+            var value = new NullableValueTypeClass()
+            {
+                DateTime = new DateTime(2024, 01, 23)
+            };
+
+            var serializer = GetSerializer();
+            var actual = serializer.ToXml(value);
+            var expected = @"<nullableValueTypeClass xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><dateTime>2024-01-23T00:00:00</dateTime></nullableValueTypeClass>";
+
+            Assert.That(actual, IsXml.Equals(expected).WithIgnoreDeclaration());
+        }
+
+        [Test]
+        public void DeserializeNullableValueType()
+        {
+            var xml = @"<nullableValueTypeClass xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><dateTime>2024-01-23T00:00:00</dateTime></nullableValueTypeClass>";
+            var expected = new NullableValueTypeClass()
+            {
+                DateTime = new DateTime(2024, 01, 23)
+            };
+
+            var actual = GetSerializer().ParseXml<NullableValueTypeClass>(xml);
+
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void SerializeStructTest()
+        {
+            var value = new Baz
+            {
+                Id = 5,
+            };
+
+            var serializer = GetSerializer();
+            var actual = serializer.ToXml(value);
+            var expected = @"<baz xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><id>5</id></baz>";
+
+            Assert.That(actual, IsXml.Equals(expected).WithIgnoreDeclaration());
+        }
+
+        [Test]
+        public void DeserializeStructTest()
+        {
+            var xml = @"<baz xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><id>5</id></baz>";
+            var expected = new Baz
+            {
+                Id = 5,
+            };
+
+            var actual = GetSerializer().ParseXml<Baz>(xml);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
         public void DeserializeTestFieldsTest()
         {
             string xml = @"<TestFields xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><a>2</a><MyProperty>5</MyProperty></TestFields>";

@@ -38,7 +38,7 @@
 
         public static bool IsActivable(this Type type)
         {
-            return !type.IsAbstract && !type.IsInterface && type.HasDefaultConstructor();
+            return !type.IsAbstract && !type.IsInterface && (type.HasDefaultConstructor() || (type.IsValueType && !type.IsPrimitive && type != typeof(decimal) && !type.IsEnum));
         }
 
         public static ConstructorInfo GetDefaultConstructor(this Type type)
