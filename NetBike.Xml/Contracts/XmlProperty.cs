@@ -1,4 +1,6 @@
-﻿namespace NetBike.Xml.Contracts
+﻿using System.Linq;
+
+namespace NetBike.Xml.Contracts
 {
     using System;
     using System.Collections.Generic;
@@ -40,6 +42,7 @@
             this.IsRequired = isRequired;
             this.Order = order;
             this.HasGetterAndSetter = memberInfo.CanRead() && memberInfo.CanWrite();
+            this.ShouldSerializeFunc = memberInfo.DeclaringType.GetMethod($"ShouldSerialize{PropertyName}") != null;
         }
 
         public MemberInfo MemberInfo { get; }
@@ -53,6 +56,8 @@
         public int Order { get; }
 
         internal bool HasGetterAndSetter { get; }
+
+        internal bool ShouldSerializeFunc { get; }
 
         internal object GetValue(object target)
         {

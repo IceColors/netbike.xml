@@ -110,7 +110,8 @@
 
         protected virtual bool CanWriteProperty(XmlProperty property)
         {
-            return property.HasGetterAndSetter;
+            // Do not serialize if ShouldSerializePropertyName() exists
+            return property.HasGetterAndSetter && !property.ShouldSerializeFunc;
         }
 
         protected virtual object CreateTarget(XmlContract contract)

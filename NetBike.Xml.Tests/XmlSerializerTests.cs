@@ -293,7 +293,7 @@
             };
 
             var actual = GetSerializer().ToXml(value);
-            var expected = @"<list xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><foo><id>1</id></foo><foo xsi:type=""NetBike.Xml.Tests.Samples.FooBar""><description>test</description><id>2</id></foo></list>";
+            var expected = @"<list xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><foo><id>1</id></foo><foo xsi:type=""NetBike.Xml.Tests.Samples.FooBar""><id>2</id><description>test</description></foo></list>";
 
             Assert.That(actual, IsXml.Equals(expected).WithIgnoreDeclaration());
         }
@@ -329,7 +329,7 @@
 
             var serializer = GetSerializer();
             var actual = serializer.ToXml(value);
-            var expected = @"<fooContainer xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><foo xsi:type=""NetBike.Xml.Tests.Samples.FooBar""><description>test</description><id>1</id></foo></fooContainer>";
+            var expected = @"<fooContainer xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><foo xsi:type=""NetBike.Xml.Tests.Samples.FooBar""><id>1</id><description>test</description></foo></fooContainer>";
 
             Assert.That(actual, IsXml.Equals(expected).WithIgnoreDeclaration());
         }
@@ -441,6 +441,68 @@
             };
 
             var actual = GetSerializer().ParseXml<Baz>(xml);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void SerializeShouldSerializeClass()
+        {
+            var value = new ShouldSerializeClass()
+            {
+                Test1 = 5,
+                Test2 = 6
+            };
+
+            var serializer = GetSerializer();
+            var actual = serializer.ToXml(value);
+            var expected = @"<shouldSerializeClass xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><test1>5</test1></shouldSerializeClass>";
+
+            Assert.That(actual, IsXml.Equals(expected).WithIgnoreDeclaration());
+        }
+
+        [Test]
+        public void DeserializeShouldSerializeClass()
+        {
+            var xml = @"<shouldSerializeClass xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><test1>5</test1><test2>6</test2></shouldSerializeClass>";
+            var expected = new ShouldSerializeClass
+            {
+                Test1 = 5,
+                Test2 = 6
+            };
+
+            var actual = GetSerializer().ParseXml<ShouldSerializeClass>(xml);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void SerializeInheritanceOrder()
+        {
+            var value = new InheritanceOrder()
+            {
+                Test1 = 5,
+                Test2 = 6
+            };
+
+            var serializer = GetSerializer();
+            var actual = serializer.ToXml(value);
+            var expected = @"<inheritanceOrder xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><test2>6</test2><test1>5</test1></inheritanceOrder>";
+
+            Assert.That(actual, IsXml.Equals(expected).WithIgnoreDeclaration());
+        }
+
+        [Test]
+        public void DeserializeInheritanceOrder()
+        {
+            var xml = @"<inheritanceOrder xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""><test2>6</test2><test1>5</test1></inheritanceOrder>";
+            var expected = new InheritanceOrder
+            {
+                Test1 = 5,
+                Test2 = 6
+            };
+
+            var actual = GetSerializer().ParseXml<InheritanceOrder>(xml);
 
             Assert.AreEqual(expected, actual);
         }

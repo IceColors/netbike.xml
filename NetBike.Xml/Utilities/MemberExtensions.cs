@@ -21,10 +21,8 @@ namespace NetBike.Xml.Utilities
         public static IEnumerable<MemberInfo> GetPropertiesAndFields(this Type type)
         {
             return type
-                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .Where(x => x.GetIndexParameters().Length == 0)
-                .Cast<MemberInfo>()
-                .Concat(type.GetFields(BindingFlags.Instance | BindingFlags.Public));
+                .GetMembers(BindingFlags.Instance | BindingFlags.Public)
+                .Where(mi => mi is PropertyInfo pi ? pi.GetIndexParameters().Length == 0 : mi is FieldInfo);
         }
 
         public static bool CanRead(this MemberInfo memberInfo){
